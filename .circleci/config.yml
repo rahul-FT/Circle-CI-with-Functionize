@@ -1,0 +1,59 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: node:9.11.1
+    steps:
+      - checkout
+      - run:
+          name: Lint CSS
+          cache:
+              untracked: true
+              policy: pull
+          command:
+            |
+            npm install
+            ./node_modules/gulp/bin/gulp.js lint-css
+      - run:
+          name: Lint JS
+          cache:
+              untracked: true
+              policy: pull
+          command:
+            |
+            ./node_modules/gulp/bin/gulp.js lint-js
+      - run:
+          name: Deploying Staging
+          environment:
+            Environment: Staging
+          only:
+              - master
+          command: |
+            apt-get update && apt-get install -y sshpass
+            echo "-------Getting SSHPASS Version-------"
+            sshpass -V
+            sshpass -ptoor ssh -o StrictHostKeyChecking=no root@35.192.162.132 "cd /usr/share/nginx/html/staging.rvsharma.com && git pull -f"
+      - run:
+          name: Running & Waiting Test-Cases
+          command: |
+            git clone https://functionize@bitbucket.org/functionize/functionizecli.git /opt/functionizecli
+            cd /opt/functionizecli
+            npm install
+            npm install -g
+            echo "-------Setting Up Config File-------"
+            mv config-sample.js config.js
+            sed -i 's/"xxxxxxxxxx"/"9dd73eb3e026a06c809eaa09cd51fdb5"/g' config.js
+            sed -i 's/"xxxxxx"/"ba3f54fb653e995f15c107ed5d876975"/g' config.js
+            export DEPLOYMENT_ID=YOUR_DEPLOYMENT_KEY
+            wget -O - https://bitbucket.org/FT_rahulVsharma/functionizecli-run-check-bash/raw/77e1f51b0f53ce238236262e69c0b425153ea9ec/run.sh | bash
+      - run:
+          name: Deploying Production
+          environment:
+            Environment: Production
+          only:
+              - master
+          command: |
+            apt-get update && apt-get install -y sshpass
+            echo "-------Getting SSHPASS Version-------"
+            sshpass -V
+            sshpass -ptoor ssh -o StrictHostKeyChecking=no root@35.192.162.132 "cd /usr/share/nginx/html/rvsharma.com && git pull -f"
