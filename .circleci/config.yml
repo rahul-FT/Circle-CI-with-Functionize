@@ -30,9 +30,7 @@ jobs:
               - master
           command: |
             apt-get update && apt-get install -y sshpass
-            echo "-------Getting SSHPASS Version-------"
-            sshpass -V
-            sshpass -ptoor ssh -o StrictHostKeyChecking=no root@35.192.162.132 "cd /usr/share/nginx/html/staging-circleci-rvsharma.com && git pull -f"
+            sshpass -p$USER_PASS ssh -o StrictHostKeyChecking=no $USER@$SERVER_IP "cd $STAGING_DIR && git pull -f"
       - run:
           name: Running & Waiting Test-Cases
           command: |
@@ -40,11 +38,6 @@ jobs:
             cd /opt/functionizecli
             npm install
             npm install -g
-            echo "-------Setting Up Config File-------"
-            mv config-sample.js config.js
-            sed -i 's/"xxxxxxxxxx"/"9dd73eb3e026a06c809eaa09cd51fdb5"/g' config.js
-            sed -i 's/"xxxxxx"/"ba3f54fb653e995f15c107ed5d876975"/g' config.js
-            export DEPLOYMENT_ID=4ef9cfe1515a702c827a5ac1b76c3ebf
             wget -O - https://bitbucket.org/functionize/functionizecli/raw/master/ThirdParty_run.sh | bash
       - run:
           name: Deploying Production
@@ -54,6 +47,4 @@ jobs:
               - master
           command: |
             apt-get update && apt-get install -y sshpass
-            echo "-------Getting SSHPASS Version-------"
-            sshpass -V
-            sshpass -ptoor ssh -o StrictHostKeyChecking=no root@35.192.162.132 "cd /usr/share/nginx/html/production-circleci-rvsharma.com && git pull -f"
+            sshpass -p$USER_PASS ssh -o StrictHostKeyChecking=no $USER@$SERVER_IP "cd $PRODUCTION_DIR && git pull -f"
